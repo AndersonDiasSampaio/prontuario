@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pacientes - Prontuário Eletrônico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 56px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar {
+            position: fixed;
+            top: 56px;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 20px 0;
+            box-shadow: inset -1px 0 0 rgba(0,0,0,.1);
+            background-color: #f8f9fa;
+            width: 250px;
+            transition: all 0.3s;
+            overflow-y: auto;
+        }
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 76px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            z-index: 1000;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s;
+            flex: 1;
+            min-height: calc(100vh - 56px);
+            background-color: #f8f9fa;
+        }
+        .nav-link {
+            color: #333;
+            padding: 10px 20px;
+        }
+        .nav-link:hover {
+            background-color: #e9ecef;
+        }
+        .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .nav-link i {
+            margin-right: 10px;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar.active {
+                margin-left: 0;
+            }
+            .main-content.active {
+                margin-left: 250px;
+            }
+        }
+        .table-actions {
+            white-space: nowrap;
+        }
+        .alert {
+            margin-bottom: 1rem;
+        }
+        .card {
+            margin-bottom: 1rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .page-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" id="sidebarToggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="#">Prontuário Eletrônico</a>
+            <div class="d-flex">
+                <span class="navbar-text me-3" th:text="${'Olá, ' + medico.nome}">Olá, Usuário</span>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-light">Sair</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+
+                <li class="nav-item">
+                    <a class="nav-link active" th:href="@{/pacientes}">
+                        <i class="bi bi-people"></i>
+                        Pacientes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/prontuarios}">
+                        <i class="bi bi-file-text"></i>
+                        Prontuários
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/medicos/perfil}">
+                        <i class="bi bi-person"></i>
+                        Meu Perfil
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container-fluid">
+            <!-- Mensagens de feedback -->
+            <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${mensagem}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${erro}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="h2 mb-0">Pacientes</h1>
+                    <a th:href="@{/pacientes/novo}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Novo Paciente
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Data de Nascimento</th>
+                                    <th>Telefone</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(pacientes)}">
+                                    <td colspan="5" class="text-center">Nenhum paciente cadastrado.</td>
+                                </tr>
+                                <tr th:each="paciente : ${pacientes}">
+                                    <td th:text="${paciente.nome}">Nome do Paciente</td>
+                                    <td th:text="${paciente.cpf}">CPF</td>
+                                    <td th:text="${#temporals.format(paciente.dataNascimento, 'dd/MM/yyyy')}">Data de Nascimento</td>
+                                    <td th:text="${paciente.telefone}">Telefone</td>
+                                    <td class="text-center table-actions">
+                                        <a th:href="@{/pacientes/editar/{id}(id=${paciente.id})}" class="btn btn-sm btn-warning me-2">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                        <a th:href="@{/pacientes/excluir/{id}(id=${paciente.id})}" 
+                                           class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Tem certeza que deseja excluir este paciente?')">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.main-content').classList.toggle('active');
+        });
+    </script>
+</body>
+</html> 
